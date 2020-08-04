@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -49,6 +49,9 @@ namespace System.Management.Automation.Configuration
     {
         private const string ConfigFileName = "powershell.config.json";
         private const string ExecutionPolicyDefaultShellKey = "Microsoft.PowerShell:ExecutionPolicy";
+        private const string DisableImplicitWinCompatKey = "DisableImplicitWinCompat";
+        private const string WindowsPowerShellCompatibilityModuleDenyListKey = "WindowsPowerShellCompatibilityModuleDenyList";
+        private const string WindowsPowerShellCompatibilityNoClobberModuleListKey = "WindowsPowerShellCompatibilityNoClobberModuleList";
 
         // Provide a singleton
         internal static readonly PowerShellConfig Instance = new PowerShellConfig();
@@ -212,6 +215,27 @@ namespace System.Management.Automation.Configuration
                 features.Remove(featureName);
                 WriteValueToFile<string[]>(scope, "ExperimentalFeatures", features.ToArray());
             }
+        }
+
+        internal bool IsImplicitWinCompatEnabled()
+        {
+            bool settingValue = ReadValueFromFile<bool?>(ConfigScope.CurrentUser, DisableImplicitWinCompatKey)
+                ?? ReadValueFromFile<bool?>(ConfigScope.AllUsers, DisableImplicitWinCompatKey)
+                ?? false;
+
+            return !settingValue;
+        }
+
+        internal string[] GetWindowsPowerShellCompatibilityModuleDenyList()
+        {
+            return ReadValueFromFile<string[]>(ConfigScope.CurrentUser, WindowsPowerShellCompatibilityModuleDenyListKey)
+                ?? ReadValueFromFile<string[]>(ConfigScope.AllUsers, WindowsPowerShellCompatibilityModuleDenyListKey);
+        }
+
+        internal string[] GetWindowsPowerShellCompatibilityNoClobberModuleList()
+        {
+            return ReadValueFromFile<string[]>(ConfigScope.CurrentUser, WindowsPowerShellCompatibilityNoClobberModuleListKey)
+                ?? ReadValueFromFile<string[]>(ConfigScope.AllUsers, WindowsPowerShellCompatibilityNoClobberModuleListKey);
         }
 
         /// <summary>

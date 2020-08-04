@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -938,7 +938,7 @@ namespace Microsoft.PowerShell.ScheduledJob
                     { }
                 }
 
-                if (!(ex is ScheduledJobException))
+                if (ex is not ScheduledJobException)
                 {
                     // Wrap in ScheduledJobException type.
                     string msg = StringUtil.Format(ScheduledJobErrorStrings.ErrorRegisteringDefinitionStore, this.Name);

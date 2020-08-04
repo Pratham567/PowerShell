@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!--
     Microsoft ResX Schema
@@ -122,5 +122,11 @@
   </data>
   <data name="PromptForCredential_Password" xml:space="preserve">
     <value>Password for user {0}: </value>
+  </data>
+  <data name="PromptForCredential_ReenterPassword" xml:space="preserve">
+    <value>Re-enter password for user {0}:</value>
+  </data>
+  <data name="PromptForCredential_PasswordMismatch" xml:space="preserve">
+    <value>Passwords do not match.</value>
   </data>
 </root>

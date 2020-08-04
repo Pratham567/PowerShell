@@ -2,7 +2,7 @@
 GUID = "1DA87E53-152B-403E-98DC-74D7B4D63D59"
 Author = "PowerShell"
 CompanyName = "Microsoft Corporation"
-Copyright = "Copyright (c) Microsoft Corporation. All rights reserved."
+Copyright = "Copyright (c) Microsoft Corporation."
 ModuleVersion = "7.0.0.0"
 CompatiblePSEditions = @("Core")
 PowerShellVersion = "3.0"
@@ -29,17 +29,13 @@ CmdletsToExport = @(
 FunctionsToExport = @()
 AliasesToExport = @('fhx')
 NestedModules = @("Microsoft.PowerShell.Commands.Utility.dll")
-HelpInfoURI = 'https://go.microsoft.com/fwlink/?linkid=855960'
+HelpInfoURI = 'https://aka.ms/powershell71-help'
 PrivateData = @{
   PSData = @{
     ExperimentalFeatures = @(
       @{
         Name        = 'Microsoft.PowerShell.Utility.PSManageBreakpointsInRunspace'
-        Description = 'Enables -BreakAll parameter on Debug-Runspace and Debug-Job cmdlets to allow users to decide if they want PowerShell to break immediately in the current location when they attach a debugger.'
-      }
-      @{
-        Name        = 'Microsoft.PowerShell.Utility.PSGetError'
-        Description = 'Enable Get-Error cmdlet that displays detailed information about ErrorRecords included nested objects'
+        Description = 'Enables -BreakAll parameter on Debug-Runspace and Debug-Job cmdlets to allow users to decide if they want PowerShell to break immediately in the current location when they attach a debugger. Enables -Runspace parameter on *-PSBreakpoint cmdlets to support management of breakpoints in another runspace.'
       }
     )
   }

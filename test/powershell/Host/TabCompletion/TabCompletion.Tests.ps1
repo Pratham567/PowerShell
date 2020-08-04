@@ -1,8 +1,9 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 Describe "TabCompletion" -Tags CI {
     BeforeAll {
         $separator = [System.IO.Path]::DirectorySeparatorChar
+        $nullConditionalFeatureDisabled = -not $EnabledExperimentalFeatures.Contains('PSNullConditionalOperators')
     }
 
     It 'Should complete Command' {
@@ -33,12 +34,12 @@ Describe "TabCompletion" -Tags CI {
         $res.CompletionMatches[0].CompletionText | Should -BeExactly 'ToString('
     }
 
-    It 'Should complete dotnet method with null conditional operator' {
+    It 'Should complete dotnet method with null conditional operator' -Skip:$nullConditionalFeatureDisabled {
         $res = TabExpansion2 -inputScript '(1)?.ToSt' -cursorColumn '(1)?.ToSt'.Length
         $res.CompletionMatches[0].CompletionText | Should -BeExactly 'ToString('
     }
 
-    It 'Should complete dotnet method with null conditional operator without first letter' {
+    It 'Should complete dotnet method with null conditional operator without first letter' -Skip:$nullConditionalFeatureDisabled {
         $res = TabExpansion2 -inputScript '(1)?.' -cursorColumn '(1)?.'.Length
         $res.CompletionMatches[0].CompletionText | Should -BeExactly 'CompareTo('
     }
@@ -108,14 +109,14 @@ Describe "TabCompletion" -Tags CI {
         $res = TabExpansion2 -inputScript 'Get-ChildItem | Select-Object @{ ' -cursorColumn 'Get-ChildItem | Select-Object @{ '.Length
         $res.CompletionMatches | Should -HaveCount 2
         $completionText = $res.CompletionMatches.CompletionText | Sort-Object
-        $completionText -join ' '| Should -BeExactly 'Expression Name'
+        $completionText -join ' ' | Should -BeExactly 'Expression Name'
     }
 
     It 'Should complete Sort-Object hashtable' {
         $res = TabExpansion2 -inputScript 'Get-ChildItem | Sort-Object @{ ' -cursorColumn 'Get-ChildItem | Sort-Object @{ '.Length
         $res.CompletionMatches | Should -HaveCount 3
         $completionText = $res.CompletionMatches.CompletionText | Sort-Object
-        $completionText -join ' '| Should -BeExactly 'Ascending Descending Expression'
+        $completionText -join ' ' | Should -BeExactly 'Ascending Descending Expression'
     }
 
     It 'Should complete New-Object hashtable' {
@@ -130,7 +131,7 @@ Describe "TabCompletion" -Tags CI {
     }
 
     It 'Should complete "Get-Process -Id " with Id and name in tooltip' {
-        Set-StrictMode -Version latest
+        Set-StrictMode -Version 3.0
         $cmd = 'Get-Process -Id '
         [System.Management.Automation.CommandCompletion]$res = TabExpansion2 -inputScript $cmd  -cursorColumn $cmd.Length
         $res.CompletionMatches[0].CompletionText -match '^\d+$' | Should -BeTrue
@@ -146,18 +147,18 @@ Describe "TabCompletion" -Tags CI {
         $res.CompletionMatches.Count | Should -BeGreaterThan 0
     }
 
-    It 'Should complete keyword' -skip {
+    It 'Should complete keyword' -Skip {
         $res = TabExpansion2 -inputScript 'using nam' -cursorColumn 'using nam'.Length
         $res.CompletionMatches[0].CompletionText | Should -BeExactly 'namespace'
     }
 
-    It 'Should first suggest -Full and then -Functionality when using Get-Help -Fu<tab>' -skip {
+    It 'Should first suggest -Full and then -Functionality when using Get-Help -Fu<tab>' -Skip {
         $res = TabExpansion2 -inputScript 'Get-Help -Fu' -cursorColumn 'Get-Help -Fu'.Length
         $res.CompletionMatches[0].CompletionText | Should -BeExactly '-Full'
         $res.CompletionMatches[1].CompletionText | Should -BeExactly '-Functionality'
     }
 
-    It 'Should first suggest -Full and then -Functionality when using help -Fu<tab>' -skip {
+    It 'Should first suggest -Full and then -Functionality when using help -Fu<tab>' -Skip {
         $res = TabExpansion2 -inputScript 'help -Fu' -cursorColumn 'help -Fu'.Length
         $res.CompletionMatches[0].CompletionText | Should -BeExactly '-Full'
         $res.CompletionMatches[1].CompletionText | Should -BeExactly '-Functionality'
@@ -348,7 +349,7 @@ Describe "TabCompletion" -Tags CI {
                 }
             }
             $line = "$nativeCommand --f"
-            $res = TaBexpansion2 -inputScript $line -cursorColumn $line.Length
+            $res = TabExpansion2 -inputScript $line -cursorColumn $line.Length
             $res.CompletionMatches | Should -HaveCount 1
             $res.CompletionMatches.CompletionText | Should -BeExactly "--flag"
         }
@@ -364,7 +365,7 @@ Describe "TabCompletion" -Tags CI {
                 }
             }
             $line = "$nativeCommand -o"
-            $res = TaBexpansion2 -inputScript $line -cursorColumn $line.Length
+            $res = TabExpansion2 -inputScript $line -cursorColumn $line.Length
             $res.CompletionMatches | Should -HaveCount 1
             $res.CompletionMatches.CompletionText | Should -BeExactly "-option"
         }
@@ -374,13 +375,13 @@ Describe "TabCompletion" -Tags CI {
         $res = TabExpansion2 -inputScript 'Export-Counter -FileFormat ' -cursorColumn 'Export-Counter -FileFormat '.Length
         $res.CompletionMatches | Should -HaveCount 3
         $completionText = $res.CompletionMatches.CompletionText | Sort-Object
-        $completionText -join ' '| Should -BeExactly 'blg csv tsv'
+        $completionText -join ' ' | Should -BeExactly 'blg csv tsv'
     }
 
     Context "Script name completion" {
         BeforeAll {
-            setup -f 'install-powershell.ps1' -content ""
-            setup -f 'remove-powershell.ps1' -content ""
+            Setup -f 'install-powershell.ps1' -Content ""
+            Setup -f 'remove-powershell.ps1' -Content ""
 
             $scriptWithWildcardCases = @(
                 @{
@@ -414,7 +415,7 @@ Describe "TabCompletion" -Tags CI {
             Pop-Location
         }
 
-        it "Input <name> should successfully complete" -TestCases $scriptWithWildcardCases {
+        It "Input <name> should successfully complete" -TestCases $scriptWithWildcardCases {
             param($command, $expectedCommand)
             $res = TabExpansion2 -inputScript $command -cursorColumn $command.Length
             $res.CompletionMatches.Count | Should -BeGreaterThan 0
@@ -611,8 +612,8 @@ Describe "TabCompletion" -Tags CI {
                 @{ inputStr = "get-childitem -Fil"; expected = "-Filter"; setup = $null }
                 @{ inputStr = '$arg'; expected = '$args'; setup = $null }
                 @{ inputStr = '$args.'; expected = 'Count'; setup = $null }
-                @{ inputStr = '$host.UI.Ra'; expected = 'RawUI'; setup = $null }
-                @{ inputStr = '$host.UI.WriteD'; expected = 'WriteDebugLine('; setup = $null }
+                @{ inputStr = '$Host.UI.Ra'; expected = 'RawUI'; setup = $null }
+                @{ inputStr = '$Host.UI.WriteD'; expected = 'WriteDebugLine('; setup = $null }
                 @{ inputStr = '$MaximumHistoryCount.'; expected = 'CompareTo('; setup = $null }
                 @{ inputStr = '$A=[datetime]::now;$A.'; expected = 'Date'; setup = $null }
                 @{ inputStr = '$e=$null;try { 1/0 } catch {$e=$_};$e.'; expected = 'CategoryInfo'; setup = $null }
@@ -696,9 +697,9 @@ Describe "TabCompletion" -Tags CI {
                 @{ inputStr = '$PSMod'; expected = '$PSModuleAutoLoadingPreference'; setup = $null }
                 ## tab completion for variable in path
                 ## if $PSHOME contains a space tabcompletion adds ' around the path
-                @{ inputStr = 'cd $pshome\Modu'; expected = if($PSHOME.Contains(' ')) { "'$(Join-Path $PSHOME 'Modules')'" } else { Join-Path $PSHOME 'Modules' }; setup = $null }
-                @{ inputStr = 'cd "$pshome\Modu"'; expected = "`"$(Join-Path $PSHOME 'Modules')`""; setup = $null }
-                @{ inputStr = '$PSHOME\System.Management.Au'; expected = if($PSHOME.Contains(' ')) { "`& '$(Join-Path $PSHOME 'System.Management.Automation.dll')'" }  else { Join-Path $PSHOME 'System.Management.Automation.dll'; setup = $null }}
+                @{ inputStr = 'cd $PSHOME\Modu'; expected = if($PSHOME.Contains(' ')) { "'$(Join-Path $PSHOME 'Modules')'" } else { Join-Path $PSHOME 'Modules' }; setup = $null }
+                @{ inputStr = 'cd "$PSHOME\Modu"'; expected = "`"$(Join-Path $PSHOME 'Modules')`""; setup = $null }
+                @{ inputStr = '$PSHOME\System.Management.Au'; expected = if($PSHOME.Contains(' ')) { "`& '$(Join-Path $PSHOME 'System.Management.Automation.dll')'" }  else { Join-Path $PSHOME 'System.Management.Automation.dll'; Setup = $null }}
                 @{ inputStr = '"$PSHOME\System.Management.Au"'; expected = "`"$(Join-Path $PSHOME 'System.Management.Automation.dll')`""; setup = $null }
                 @{ inputStr = '& "$PSHOME\System.Management.Au"'; expected = "`"$(Join-Path $PSHOME 'System.Management.Automation.dll')`""; setup = $null }
                 ## tab completion AST-based tests
@@ -834,6 +835,32 @@ Describe "TabCompletion" -Tags CI {
             $res.CompletionMatches | Should -HaveCount 2
             $res.CompletionMatches[0].CompletionText | Should -BeExactly 'cat'
             $res.CompletionMatches[1].CompletionText | Should -BeExactly 'dog'
+        }
+
+        It "Tab completion for ArgumentCompleter when AST is passed to CompleteInput" {
+            $scriptBl = {
+                function Test-Completion {
+                    param (
+                        [String]$TestVal
+                    )
+                }
+                [scriptblock]$completer = {
+                    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+
+                    @('Val1', 'Val2')
+                }
+                Register-ArgumentCompleter -CommandName Test-Completion -ParameterName TestVal -ScriptBlock $completer
+            }
+            $pwsh = [PowerShell]::Create()
+            $pwsh.AddScript($scriptBl)
+            $pwsh.Invoke()
+
+            $completeInput_Input = $scriptBl.ToString()
+            $completeInput_Input += "`nTest-Completion -TestVal "
+            $res = [System.Management.Automation.CommandCompletion]::CompleteInput($completeInput_Input, $completeInput_Input.Length, $null, $pwsh)
+            $res.CompletionMatches | Should -HaveCount 2
+            $res.CompletionMatches[0].CompletionText | Should -BeExactly 'Val1'
+            $res.CompletionMatches[1].CompletionText | Should -BeExactly 'Val2'
         }
 
         It "Tab completion for enum type parameter of a custom function" {
@@ -1085,7 +1112,7 @@ dir -Recurse `
                 "Overridden-TabExpansion-Function"
             }
 
-            $inputStr = '$pid.'
+            $inputStr = '$PID.'
             $res = [System.Management.Automation.CommandCompletion]::CompleteInput($inputStr, $inputst.Length, $null)
             $res.CompletionMatches | Should -HaveCount 1
             $res.CompletionMatches[0].CompletionText | Should -BeExactly 'Overridden-TabExpansion-Function'
@@ -1097,7 +1124,7 @@ dir -Recurse `
             }
             Set-Alias -Name TabExpansion -Value OverrideTabExpansion
 
-            $inputStr = '$pid.'
+            $inputStr = '$PID.'
             $res = [System.Management.Automation.CommandCompletion]::CompleteInput($inputStr, $inputst.Length, $null)
             $res.CompletionMatches | Should -HaveCount 1
             $res.CompletionMatches[0].CompletionText | Should -BeExactly "Overridden-TabExpansion-Alias"
@@ -1126,12 +1153,12 @@ dir -Recurse `
             $ast = {}.Ast;
             $tokens = [System.Management.Automation.Language.Token[]]@()
             $testCases = @(
-                @{ inputStr = {[System.Management.Automation.CommandCompletion]::MapStringInputToParsedInput('$pid.', 7)}; expected = "PSArgumentException" }
+                @{ inputStr = {[System.Management.Automation.CommandCompletion]::MapStringInputToParsedInput('$PID.', 7)}; expected = "PSArgumentException" }
                 @{ inputStr = {[System.Management.Automation.CommandCompletion]::CompleteInput($null, $null, $null, $null)}; expected = "PSArgumentNullException" }
                 @{ inputStr = {[System.Management.Automation.CommandCompletion]::CompleteInput($ast, $null, $null, $null)}; expected = "PSArgumentNullException" }
                 @{ inputStr = {[System.Management.Automation.CommandCompletion]::CompleteInput($ast, $tokens, $null, $null)}; expected = "PSArgumentNullException" }
-                @{ inputStr = {[System.Management.Automation.CommandCompletion]::CompleteInput('$pid.', 7, $null, $null)}; expected = "PSArgumentException" }
-                @{ inputStr = {[System.Management.Automation.CommandCompletion]::CompleteInput('$pid.', 5, $null, $null)}; expected = "PSArgumentNullException" }
+                @{ inputStr = {[System.Management.Automation.CommandCompletion]::CompleteInput('$PID.', 7, $null, $null)}; expected = "PSArgumentException" }
+                @{ inputStr = {[System.Management.Automation.CommandCompletion]::CompleteInput('$PID.', 5, $null, $null)}; expected = "PSArgumentNullException" }
                 @{ inputStr = {[System.Management.Automation.CommandCompletion]::CompleteInput($null, $null, $null, $null, $null)}; expected = "PSArgumentNullException" }
                 @{ inputStr = {[System.Management.Automation.CommandCompletion]::CompleteInput($ast, $null, $null, $null, $null)}; expected = "PSArgumentNullException" }
                 @{ inputStr = {[System.Management.Automation.CommandCompletion]::CompleteInput($ast, $tokens, $null, $null, $null)}; expected = "PSArgumentNullException" }
@@ -1191,7 +1218,7 @@ dir -Recurse `
             $testCases = @(
                 @{ inputStr = "Invoke-CimMethod -ClassName Win32_Process -MethodName Crea"; expected = "Create" }
                 @{ inputStr = "Get-CimInstance -ClassName Win32_Process | Invoke-CimMethod -MethodName AttachDeb"; expected = "AttachDebugger" }
-                @{ inputStr = 'Get-CimInstance Win32_Process | ?{ $_.ProcessId -eq $Pid } | Get-CimAssociatedInstance -ResultClassName Win32_Co*uterSyst'; expected = "Win32_ComputerSystem" }
+                @{ inputStr = 'Get-CimInstance Win32_Process | ?{ $_.ProcessId -eq $PID } | Get-CimAssociatedInstance -ResultClassName Win32_Co*uterSyst'; expected = "Win32_ComputerSystem" }
                 @{ inputStr = "Get-CimInstance -ClassName Win32_Environm"; expected = "Win32_Environment" }
                 @{ inputStr = "New-CimInstance -ClassName Win32_Environm"; expected = "Win32_Environment" }
                 @{ inputStr = 'New-CimInstance -ClassName Win32_Process | %{ $_.Captio'; expected = "Caption" }
@@ -1201,7 +1228,7 @@ dir -Recurse `
                 @{ inputStr = 'Invoke-CimMethod -Namespace root/StandardCimv2 -ClassName MSFT_NetIPAddress -MethodName Crea'; expected = 'Create' }
                 @{ inputStr = '$win32_process = Get-CimInstance -ClassName Win32_Process; $win32_process | Invoke-CimMethod -MethodName AttachDe'; expected = 'AttachDebugger' }
                 @{ inputStr = '$win32_process = Get-CimInstance -ClassName Win32_Process; Invoke-CimMethod -InputObject $win32_process -MethodName AttachDe'; expected = 'AttachDebugger' }
-                @{ inputStr = 'Get-CimInstance Win32_Process | ?{ $_.ProcessId -eq $Pid } | Get-CimAssociatedInstance -ResultClassName Win32_ComputerS'; expected = 'Win32_ComputerSystem' }
+                @{ inputStr = 'Get-CimInstance Win32_Process | ?{ $_.ProcessId -eq $PID } | Get-CimAssociatedInstance -ResultClassName Win32_ComputerS'; expected = 'Win32_ComputerSystem' }
                 @{ inputStr = 'Get-CimInstance -Namespace root/Interop -ClassName Win32_PowerSupplyP'; expected = 'Win32_PowerSupplyProfile' }
                 @{ inputStr = 'Get-CimInstance __NAMESP'; expected = '__NAMESPACE' }
                 @{ inputStr = 'Get-CimInstance -Namespace root/Inter'; expected = 'root/Interop' }
@@ -1222,7 +1249,7 @@ dir -Recurse `
 
             $res = TabExpansion2 -inputScript $inputStr -cursorColumn $inputStr.Length
             $res.CompletionMatches.Count | Should -BeGreaterThan 0
-            $res.CompletionMatches[0].CompletionText | Should -BeExactly $expected
+            $res.CompletionMatches[0].CompletionText | Should -Be $expected
         }
     }
 

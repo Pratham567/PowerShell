@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -15,7 +15,7 @@ namespace Microsoft.PowerShell.Commands
     /// Null sink to absorb pipeline output.
     /// </summary>
     [CmdletAttribute("Out", "Null", SupportsShouldProcess = false,
-        HelpUri = "https://go.microsoft.com/fwlink/?LinkID=113366", RemotingCapability = RemotingCapability.None)]
+        HelpUri = "https://go.microsoft.com/fwlink/?LinkID=2096792", RemotingCapability = RemotingCapability.None)]
     public class OutNullCommand : PSCmdlet
     {
         /// <summary>
@@ -40,7 +40,7 @@ namespace Microsoft.PowerShell.Commands
     /// powershell host at the end of the pipeline as the
     /// default sink (display to console screen)
     /// </summary>
-    [Cmdlet(VerbsData.Out, "Default", HelpUri = "https://go.microsoft.com/fwlink/?LinkID=113362", RemotingCapability = RemotingCapability.None)]
+    [Cmdlet(VerbsData.Out, "Default", HelpUri = "https://go.microsoft.com/fwlink/?LinkID=2096486", RemotingCapability = RemotingCapability.None)]
     public class OutDefaultCommand : FrontEndCommandBase
     {
         /// <summary>
@@ -109,11 +109,10 @@ namespace Microsoft.PowerShell.Commands
                 object inputObjectBase = PSObject.Base(InputObject);
 
                 // Ignore errors and formatting records, as those can't be captured
-                if (
-                    (inputObjectBase != null) &&
-                    (!(inputObjectBase is ErrorRecord)) &&
-                    (!inputObjectBase.GetType().FullName.StartsWith(
-                        "Microsoft.PowerShell.Commands.Internal.Format", StringComparison.OrdinalIgnoreCase)))
+                if (inputObjectBase != null &&
+                    inputObjectBase is not ErrorRecord &&
+                    !inputObjectBase.GetType().FullName.StartsWith(
+                        "Microsoft.PowerShell.Commands.Internal.Format", StringComparison.OrdinalIgnoreCase))
                 {
                     _outVarResults.Add(InputObject);
                 }
@@ -169,7 +168,7 @@ namespace Microsoft.PowerShell.Commands
     /// <summary>
     /// Implementation for the out-host command.
     /// </summary>
-    [Cmdlet(VerbsData.Out, "Host", HelpUri = "https://go.microsoft.com/fwlink/?LinkID=113365", RemotingCapability = RemotingCapability.None)]
+    [Cmdlet(VerbsData.Out, "Host", HelpUri = "https://go.microsoft.com/fwlink/?LinkID=2096863", RemotingCapability = RemotingCapability.None)]
     public class OutHostCommand : FrontEndCommandBase
     {
         #region Command Line Parameters

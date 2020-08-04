@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 $definition = @'
 using System;
@@ -10,6 +10,7 @@ using System.Globalization;
 using System.Collections.ObjectModel;
 using System.Security;
 using System.Collections;
+using System.Runtime.InteropServices;
 
 namespace TestHost
 {
@@ -145,18 +146,36 @@ namespace TestHost
 
         public override PSCredential PromptForCredential(string caption, string message, string userName, string targetName)
         {
-            Streams.Prompt.Add("Credential:" + caption + ":" + message);
-            SecureString ss = ReadLineAsSecureString();
-            string userNameToUse = string.IsNullOrEmpty(userName) ? UserNameForCredential : userName;
-            return new PSCredential(userNameToUse, ss);
+            return PromptForCredential(caption,
+                                        message,
+                                        userName,
+                                        confirmPassword: false,
+                                        targetName,
+                                        PSCredentialTypes.Default,
+                                        PSCredentialUIOptions.Default);
         }
 
         public override PSCredential PromptForCredential(string caption, string message, string userName, string targetName, PSCredentialTypes allowedCredentialTypes, PSCredentialUIOptions options)
         {
+            return PromptForCredential(caption,
+                                         message,
+                                         userName,
+                                         confirmPassword: false,
+                                         targetName,
+                                         allowedCredentialTypes,
+                                         options);
+        }
+
+        public override PSCredential PromptForCredential(string caption, string message, string userName, bool confirmPassword, string targetName, PSCredentialTypes allowedCredentialTypes, PSCredentialUIOptions options)
+        {
             Streams.Prompt.Add("Credential:" + caption + ":" + message);
-            SecureString ss = ReadLineAsSecureString();
+            SecureString password = ReadLineAsSecureString();
+            if(confirmPassword)
+            {
+                Streams.Prompt.Add("Credential@" + caption + "@" + message);
+            }
             string userNameToUse = string.IsNullOrEmpty(userName) ? UserNameForCredential : userName;
-            return new PSCredential(userNameToUse, ss);
+            return new PSCredential(userNameToUse, password);
         }
 
         public override string ReadLine()
@@ -310,7 +329,7 @@ function New-TestHost
     }
 
     if ( ! ("TestHost.TestHost" -as "type" )) {
-       $t = add-Type -pass $definition -ref $references
+       $t = Add-Type -pass $definition -ref $references
     }
 
     [TestHost.TestHost]::New()

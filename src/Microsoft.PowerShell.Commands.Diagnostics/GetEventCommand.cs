@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -24,7 +24,7 @@ namespace Microsoft.PowerShell.Commands
     ///
     /// Class that implements the Get-WinEvent cmdlet.
     ///
-    [Cmdlet(VerbsCommon.Get, "WinEvent", DefaultParameterSetName = "GetLogSet", HelpUri = "https://go.microsoft.com/fwlink/?LinkID=138336")]
+    [Cmdlet(VerbsCommon.Get, "WinEvent", DefaultParameterSetName = "GetLogSet", HelpUri = "https://go.microsoft.com/fwlink/?LinkID=2096581")]
     public sealed class GetWinEventCommand : PSCmdlet
     {
         /// <summary>
@@ -592,7 +592,7 @@ namespace Microsoft.PowerShell.Commands
                 }
 
                 logQuery.Session = eventLogSession;
-                logQuery.ReverseDirection = !_oldest; ;
+                logQuery.ReverseDirection = !_oldest;
 
                 ReadEvents(logQuery);
             }
@@ -613,7 +613,7 @@ namespace Microsoft.PowerShell.Commands
                     foreach (string logName in eventLogSession.GetLogNames())
                     {
                         if (((!WildcardPattern.ContainsWildcardCharacters(logPattern))
-                            && string.Equals(logPattern, logName, StringComparison.CurrentCultureIgnoreCase))
+                            && string.Equals(logPattern, logName, StringComparison.OrdinalIgnoreCase))
                             ||
                             (wildLogPattern.IsMatch(logName)))
                         {
@@ -683,7 +683,7 @@ namespace Microsoft.PowerShell.Commands
                     foreach (string provName in eventLogSession.GetProviderNames())
                     {
                         if (((!WildcardPattern.ContainsWildcardCharacters(provPattern))
-                            && string.Equals(provPattern, provName, StringComparison.CurrentCultureIgnoreCase))
+                            && string.Equals(provPattern, provName, StringComparison.OrdinalIgnoreCase))
                             ||
                             (wildProvPattern.IsMatch(provName)))
                         {
@@ -2018,7 +2018,6 @@ namespace Microsoft.PowerShell.Commands
                         _providersByLogMap.Add(logLink.LogName.ToLowerInvariant(), provColl);
                     }
                     else
-
                     {
                         //
                         // Log is there: add provider, if needed
@@ -2070,7 +2069,7 @@ namespace Microsoft.PowerShell.Commands
                 foreach (string actualLogName in eventLogSession.GetLogNames())
                 {
                     if (((!WildcardPattern.ContainsWildcardCharacters(logPattern))
-                        && (logPattern.Equals(actualLogName, StringComparison.CurrentCultureIgnoreCase)))
+                        && (logPattern.Equals(actualLogName, StringComparison.OrdinalIgnoreCase)))
                         ||
                         (wildLogPattern.IsMatch(actualLogName)))
                     {
@@ -2139,7 +2138,7 @@ namespace Microsoft.PowerShell.Commands
                 foreach (string provName in eventLogSession.GetProviderNames())
                 {
                     if (((!WildcardPattern.ContainsWildcardCharacters(provPattern))
-                      && (provPattern.Equals(provName, StringComparison.CurrentCultureIgnoreCase)))
+                      && (provPattern.Equals(provName, StringComparison.OrdinalIgnoreCase)))
                       ||
                       (wildProvPattern.IsMatch(provName)))
                     {

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -64,7 +64,7 @@ namespace Microsoft.PowerShell.Commands
     /// </summary>
     [SuppressMessage("Microsoft.PowerShell", "PS1012:CallShouldProcessOnlyIfDeclaringSupport")]
     [Cmdlet(VerbsCommunications.Receive, "PSSession", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.Low,
-        DefaultParameterSetName = ReceivePSSessionCommand.SessionParameterSet, HelpUri = "https://go.microsoft.com/fwlink/?LinkID=217037",
+        DefaultParameterSetName = ReceivePSSessionCommand.SessionParameterSet, HelpUri = "https://go.microsoft.com/fwlink/?LinkID=2096800",
         RemotingCapability = RemotingCapability.OwnedByCommand)]
     public class ReceivePSSessionCommand : PSRemotingCmdlet
     {
@@ -467,7 +467,7 @@ namespace Microsoft.PowerShell.Commands
                 // Find specified session.
                 bool haveMatch = false;
                 if (!string.IsNullOrEmpty(name) &&
-                    string.Compare(name, ((RemoteRunspace)runspace).RunspacePool.RemoteRunspacePoolInternal.Name, StringComparison.OrdinalIgnoreCase) == 0)
+                    string.Equals(name, ((RemoteRunspace)runspace).RunspacePool.RemoteRunspacePoolInternal.Name, StringComparison.OrdinalIgnoreCase))
                 {
                     // Selected by friendly name.
                     haveMatch = true;

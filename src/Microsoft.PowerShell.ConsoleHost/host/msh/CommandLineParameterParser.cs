@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -47,7 +47,7 @@ namespace Microsoft.PowerShell
         }
 
         /// <summary>
-        /// PromptForChoice.
+        /// Prompt for choice.
         /// </summary>
         /// <param name="caption"></param>
         /// <param name="message"></param>
@@ -60,7 +60,7 @@ namespace Microsoft.PowerShell
         }
 
         /// <summary>
-        /// PromptForCredential.
+        /// Prompt for credential.
         /// </summary>
         /// <param name="caption"></param>
         /// <param name="message"></param>
@@ -73,7 +73,7 @@ namespace Microsoft.PowerShell
         }
 
         /// <summary>
-        /// PromptForCredential.
+        /// Prompt for credential.
         /// </summary>
         /// <param name="caption"></param>
         /// <param name="message"></param>
@@ -88,7 +88,23 @@ namespace Microsoft.PowerShell
         }
 
         /// <summary>
-        /// ReadLine.
+        /// Prompt for credential.
+        /// </summary>
+        /// <param name="caption"></param>
+        /// <param name="message"></param>
+        /// <param name="userName"></param>
+        /// <param name="confirmPassword"></param>
+        /// <param name="targetName"></param>
+        /// <param name="allowedCredentialTypes"></param>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        public override PSCredential PromptForCredential(string caption, string message, string userName, bool confirmPassword, string targetName, PSCredentialTypes allowedCredentialTypes, PSCredentialUIOptions options)
+        {
+            throw new PSNotImplementedException();
+        }
+
+        /// <summary>
+        /// Read line.
         /// </summary>
         /// <returns></returns>
         public override string ReadLine()
@@ -172,7 +188,7 @@ namespace Microsoft.PowerShell
         private const int MaxPipePathLengthLinux = 108;
         private const int MaxPipePathLengthMacOS = 104;
 
-        internal static string[] validParameters = {
+        internal static readonly string[] validParameters = {
             "sta",
             "mta",
             "command",
@@ -847,7 +863,7 @@ namespace Microsoft.PowerShell
 #if DEBUG
                 // this option is useful when debugging ConsoleHost remotely using VS remote debugging, as you can only
                 // attach to an already running process with that debugger.
-                else if (MatchSwitch(switchKey, "wait", "w"))
+                else if (MatchSwitch(switchKey, "wait", "wa"))
                 {
                     // This does not need to be localized: its chk only
 
@@ -868,7 +884,6 @@ namespace Microsoft.PowerShell
                 {
                     // Just toss this option, it was processed earlier...
                 }
-
                 else if (MatchSwitch(switchKey, "modules", "mod"))
                 {
                     if (ConsoleHost.DefaultInitialSessionState == null)
@@ -911,7 +926,7 @@ namespace Microsoft.PowerShell
                     ParseFormat(args, ref i, ref _outFormat, CommandLineParameterParserStrings.MissingOutputFormatParameter);
                     _outputFormatSpecified = true;
                 }
-                else if (MatchSwitch(switchKey, "inputformat", "in") || MatchSwitch(switchKey, "if", "if"))
+                else if (MatchSwitch(switchKey, "inputformat", "inp") || MatchSwitch(switchKey, "if", "if"))
                 {
                     ParseFormat(args, ref i, ref _inFormat, CommandLineParameterParserStrings.MissingInputFormatParameter);
                 }
@@ -942,7 +957,7 @@ namespace Microsoft.PowerShell
                         break;
                     }
                 }
-                else if (MatchSwitch(switchKey, "sta", "s"))
+                else if (MatchSwitch(switchKey, "sta", "sta"))
                 {
                     if (!Platform.IsWindowsDesktop)
                     {

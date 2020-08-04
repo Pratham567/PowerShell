@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -18,7 +18,7 @@ namespace Microsoft.PowerShell.Commands
     /// </summary>
     [Cmdlet(VerbsData.Update, "Help", DefaultParameterSetName = PathParameterSetName,
         SupportsShouldProcess = true,
-        HelpUri = "https://go.microsoft.com/fwlink/?LinkID=210614")]
+        HelpUri = "https://go.microsoft.com/fwlink/?LinkID=2096805")]
     public sealed class UpdateHelpCommand : UpdatableHelpCommandBase
     {
         #region Constructor

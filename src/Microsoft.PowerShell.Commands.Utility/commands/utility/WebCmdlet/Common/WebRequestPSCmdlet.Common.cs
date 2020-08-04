@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -663,8 +663,15 @@ namespace Microsoft.PowerShell.Commands
             {
                 foreach (string key in Headers.Keys)
                 {
-                    // add the header value (or overwrite it if already present)
-                    WebSession.Headers[key] = Headers[key].ToString();
+                    var value = Headers[key];
+
+                    // null is not valid value for header.
+                    // We silently ignore header if value is null.
+                    if (value is not null)
+                    {
+                        // add the header value (or overwrite it if already present)
+                        WebSession.Headers[key] = value.ToString();
+                    }
                 }
             }
 
@@ -744,7 +751,7 @@ namespace Microsoft.PowerShell.Commands
 
         private Uri CheckProtocol(Uri uri)
         {
-            if (uri == null) { throw new ArgumentNullException("uri"); }
+            if (uri == null) { throw new ArgumentNullException(nameof(uri)); }
 
             if (!uri.IsAbsoluteUri)
             {
@@ -756,14 +763,14 @@ namespace Microsoft.PowerShell.Commands
 
         private string QualifyFilePath(string path)
         {
-            string resolvedFilePath = PathUtils.ResolveFilePath(path, this, false);
+            string resolvedFilePath = PathUtils.ResolveFilePath(filePath: path, command: this, isLiteralPath: true);
             return resolvedFilePath;
         }
 
         private string FormatDictionary(IDictionary content)
         {
             if (content == null)
-                throw new ArgumentNullException("content");
+                throw new ArgumentNullException(nameof(content));
 
             StringBuilder bodyBuilder = new StringBuilder();
             foreach (string key in content.Keys)
@@ -911,7 +918,7 @@ namespace Microsoft.PowerShell.Commands
         /// <summary>
         /// Cancellation token source.
         /// </summary>
-        private CancellationTokenSource _cancelToken = null;
+        internal CancellationTokenSource _cancelToken = null;
 
         /// <summary>
         /// Parse Rel Links.
@@ -1063,7 +1070,7 @@ namespace Microsoft.PowerShell.Commands
                     if (!string.IsNullOrEmpty(CustomMethod))
                     {
                         // set the method if the parameter was provided
-                        httpMethod = new HttpMethod(CustomMethod.ToString().ToUpperInvariant());
+                        httpMethod = new HttpMethod(CustomMethod.ToUpperInvariant());
                     }
 
                     break;
@@ -1158,7 +1165,7 @@ namespace Microsoft.PowerShell.Commands
 
         internal virtual void FillRequestStream(HttpRequestMessage request)
         {
-            if (request == null) { throw new ArgumentNullException("request"); }
+            if (request == null) { throw new ArgumentNullException(nameof(request)); }
 
             // set the content type
             if (ContentType != null)
@@ -1260,21 +1267,24 @@ namespace Microsoft.PowerShell.Commands
 
             foreach (var entry in WebSession.ContentHeaders)
             {
-                if (SkipHeaderValidation)
+                if (!string.IsNullOrWhiteSpace(entry.Value))
                 {
-                    request.Content.Headers.TryAddWithoutValidation(entry.Key, entry.Value);
-                }
-                else
-                {
-                    try
+                    if (SkipHeaderValidation)
                     {
-                        request.Content.Headers.Add(entry.Key, entry.Value);
+                        request.Content.Headers.TryAddWithoutValidation(entry.Key, entry.Value);
                     }
-                    catch (FormatException ex)
+                    else
                     {
-                        var outerEx = new ValidationMetadataException(WebCmdletStrings.ContentTypeException, ex);
-                        ErrorRecord er = new ErrorRecord(outerEx, "WebCmdletContentTypeException", ErrorCategory.InvalidArgument, ContentType);
-                        ThrowTerminatingError(er);
+                        try
+                        {
+                            request.Content.Headers.Add(entry.Key, entry.Value);
+                        }
+                        catch (FormatException ex)
+                        {
+                            var outerEx = new ValidationMetadataException(WebCmdletStrings.ContentTypeException, ex);
+                            ErrorRecord er = new ErrorRecord(outerEx, "WebCmdletContentTypeException", ErrorCategory.InvalidArgument, ContentType);
+                            ThrowTerminatingError(er);
+                        }
                     }
                 }
             }
@@ -1328,9 +1338,9 @@ namespace Microsoft.PowerShell.Commands
 
         internal virtual HttpResponseMessage GetResponse(HttpClient client, HttpRequestMessage request, bool keepAuthorization)
         {
-            if (client == null) { throw new ArgumentNullException("client"); }
+            if (client == null) { throw new ArgumentNullException(nameof(client)); }
 
-            if (request == null) { throw new ArgumentNullException("request"); }
+            if (request == null) { throw new ArgumentNullException(nameof(request)); }
 
             // Add 1 to account for the first request.
             int totalRequests = WebSession.MaximumRetryCount + 1;
@@ -1442,7 +1452,7 @@ namespace Microsoft.PowerShell.Commands
 
         internal virtual void UpdateSession(HttpResponseMessage response)
         {
-            if (response == null) { throw new ArgumentNullException("response"); }
+            if (response == null) { throw new ArgumentNullException(nameof(response)); }
         }
 
         #endregion Virtual Methods
@@ -1468,7 +1478,7 @@ namespace Microsoft.PowerShell.Commands
                                           &&
                                           PreserveAuthorizationOnRedirect.IsPresent
                                           &&
-                                          WebSession.Headers.ContainsKey(HttpKnownHeaderNames.Authorization.ToString());
+                                          WebSession.Headers.ContainsKey(HttpKnownHeaderNames.Authorization);
 
                 using (HttpClient client = GetHttpClient(keepAuthorization))
                 {
@@ -1648,7 +1658,7 @@ namespace Microsoft.PowerShell.Commands
         internal long SetRequestContent(HttpRequestMessage request, byte[] content)
         {
             if (request == null)
-                throw new ArgumentNullException("request");
+                throw new ArgumentNullException(nameof(request));
             if (content == null)
                 return 0;
 
@@ -1671,7 +1681,7 @@ namespace Microsoft.PowerShell.Commands
         internal long SetRequestContent(HttpRequestMessage request, string content)
         {
             if (request == null)
-                throw new ArgumentNullException("request");
+                throw new ArgumentNullException(nameof(request));
 
             if (content == null)
                 return 0;
@@ -1720,7 +1730,7 @@ namespace Microsoft.PowerShell.Commands
         internal long SetRequestContent(HttpRequestMessage request, XmlNode xmlNode)
         {
             if (request == null)
-                throw new ArgumentNullException("request");
+                throw new ArgumentNullException(nameof(request));
 
             if (xmlNode == null)
                 return 0;
@@ -1757,9 +1767,9 @@ namespace Microsoft.PowerShell.Commands
         internal long SetRequestContent(HttpRequestMessage request, Stream contentStream)
         {
             if (request == null)
-                throw new ArgumentNullException("request");
+                throw new ArgumentNullException(nameof(request));
             if (contentStream == null)
-                throw new ArgumentNullException("contentStream");
+                throw new ArgumentNullException(nameof(contentStream));
 
             var streamContent = new StreamContent(contentStream);
             request.Content = streamContent;
@@ -1781,12 +1791,12 @@ namespace Microsoft.PowerShell.Commands
         {
             if (request == null)
             {
-                throw new ArgumentNullException("request");
+                throw new ArgumentNullException(nameof(request));
             }
 
             if (multipartContent == null)
             {
-                throw new ArgumentNullException("multipartContent");
+                throw new ArgumentNullException(nameof(multipartContent));
             }
 
             request.Content = multipartContent;
@@ -1797,9 +1807,9 @@ namespace Microsoft.PowerShell.Commands
         internal long SetRequestContent(HttpRequestMessage request, IDictionary content)
         {
             if (request == null)
-                throw new ArgumentNullException("request");
+                throw new ArgumentNullException(nameof(request));
             if (content == null)
-                throw new ArgumentNullException("content");
+                throw new ArgumentNullException(nameof(content));
 
             string body = FormatDictionary(content);
             return (SetRequestContent(request, body));
@@ -1819,7 +1829,7 @@ namespace Microsoft.PowerShell.Commands
 
             // we only support the URL in angle brackets and `rel`, other attributes are ignored
             // user can still parse it themselves via the Headers property
-            string pattern = "<(?<url>.*?)>;\\s*rel=\"(?<rel>.*?)\"";
+            string pattern = "<(?<url>.*?)>;\\s*rel=(\"?)(?<rel>.*?)\\1[^\\w -.]?";
             IEnumerable<string> links;
             if (response.Headers.TryGetValues("Link", out links))
             {
@@ -1835,7 +1845,7 @@ namespace Microsoft.PowerShell.Commands
                             if (url != string.Empty && rel != string.Empty && !_relationLink.ContainsKey(rel))
                             {
                                 Uri absoluteUri = new Uri(requestUri, url);
-                                _relationLink.Add(rel, absoluteUri.AbsoluteUri.ToString());
+                                _relationLink.Add(rel, absoluteUri.AbsoluteUri);
                             }
                         }
                     }
@@ -1889,7 +1899,7 @@ namespace Microsoft.PowerShell.Commands
             }
 
             // Treat the value as a collection and enumerate it if enumeration is true
-            if (enumerate == true && fieldValue is IEnumerable items)
+            if (enumerate && fieldValue is IEnumerable items)
             {
                 foreach (var item in items)
                 {

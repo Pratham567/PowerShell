@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.IO;
@@ -455,7 +455,7 @@ namespace System.Management.Automation.Remoting
                 // this do loop will process one deserialized object.
                 // using a loop allows to process multiple objects within
                 // the same packet
-                do
+                while (true)
                 {
                     if (_pendingDataStream.Length <= FragmentedRemoteObject.HeaderLength)
                     {
@@ -651,7 +651,7 @@ namespace System.Management.Automation.Remoting
                             break;
                         }
                     }
-                } while (true);
+                }
             }
             finally
             {

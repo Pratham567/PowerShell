@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -23,7 +23,7 @@ namespace Microsoft.PowerShell.Commands
     /// <summary>
     /// This class implements get-help command.
     /// </summary>
-    [Cmdlet(VerbsCommon.Get, "Help", DefaultParameterSetName = "AllUsersView", HelpUri = "https://go.microsoft.com/fwlink/?LinkID=113316")]
+    [Cmdlet(VerbsCommon.Get, "Help", DefaultParameterSetName = "AllUsersView", HelpUri = "https://go.microsoft.com/fwlink/?LinkID=2096483")]
     public sealed class GetHelpCommand : PSCmdlet
     {
         /// <summary>

@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 <#
 .Synopsis
@@ -54,7 +54,7 @@ param(
     [switch] $Preview
 )
 
-Set-StrictMode -Version latest
+Set-StrictMode -Version 3.0
 $ErrorActionPreference = "Stop"
 
 $IsLinuxEnv = (Get-Variable -Name "IsLinux" -ErrorAction Ignore) -and $IsLinux
@@ -122,9 +122,9 @@ Function Remove-Destination([string] $Destination) {
         if (Test-Path -Path "$Destination.old") {
             Remove-Item "$Destination.old" -Recurse -Force
         }
-        if ($IsWinEnv -and ($Destination -eq $PSHome)) {
+        if ($IsWinEnv -and ($Destination -eq $PSHOME)) {
             # handle the case where the updated folder is currently in use
-            Get-ChildItem -Recurse -File -Path $PSHome | ForEach-Object {
+            Get-ChildItem -Recurse -File -Path $PSHOME | ForEach-Object {
                 if ($_.extension -eq "old") {
                     Remove-Item $_
                 } else {
@@ -224,7 +224,7 @@ Function Add-PathTToSettings {
 
     # $key is null here if it the user was unable to get ReadWriteSubTree access.
     if ($null -eq $Key) {
-        throw (new-object -typeName 'System.Security.SecurityException' -ArgumentList "Unable to access the target registry")
+        throw (New-Object -TypeName 'System.Security.SecurityException' -ArgumentList "Unable to access the target registry")
     }
 
     # Get current unexpanded value
@@ -248,6 +248,8 @@ Function Add-PathTToSettings {
 
 if (-not $IsWinEnv) {
     $architecture = "x64"
+} elseif ($(Get-ComputerInfo -Property OsArchitecture).OsArchitecture -eq "ARM 64-bit Processor") {
+    $architecture = "arm64"
 } else {
     switch ($env:PROCESSOR_ARCHITECTURE) {
         "AMD64" { $architecture = "x64" }
@@ -350,7 +352,11 @@ try {
 
         if ($IsWinEnv) {
             if ($UseMSI) {
-                $packageName = "PowerShell-${release}-win-${architecture}.msi"
+                if ($architecture -eq "arm64") {
+                    $packageName = "PowerShell-${release}-win-${architecture}.msix"
+                } else {
+                    $packageName = "PowerShell-${release}-win-${architecture}.msi"
+                }
             } else {
                 $packageName = "PowerShell-${release}-win-${architecture}.zip"
             }
@@ -382,7 +388,9 @@ try {
 
         $null = New-Item -ItemType Directory -Path $contentPath -ErrorAction SilentlyContinue
         if ($IsWinEnv) {
-            if ($UseMSI -and $Quiet) {
+            if ($UseMSI -and $architecture -eq "arm64") {
+                Add-AppxPackage -Path $packagePath
+            } elseif ($UseMSI -and $Quiet) {
                 Write-Verbose "Performing quiet install"
                 $ArgumentList=@("/i", $packagePath, "/quiet")
                 if($MSIArguments) {
@@ -419,19 +427,6 @@ try {
             $null = New-Item -Path (Split-Path -Path $Destination -Parent) -ItemType Directory -ErrorAction SilentlyContinue
             Move-Item -Path $contentPath -Destination $Destination
         }
-    }
-
-    # Edit icon to disambiguate daily builds.
-    if ($IsWinEnv -and $Daily.IsPresent) {
-        if (-not (Test-Path "~/.rcedit/rcedit-x64.exe")) {
-            Write-Verbose "Install RCEdit for modifying exe resources" -Verbose
-            $rceditUrl = "https://github.com/electron/rcedit/releases/download/v1.0.0/rcedit-x64.exe"
-            $null = New-Item -Path "~/.rcedit" -Type Directory -Force -ErrorAction SilentlyContinue
-            Invoke-WebRequest -OutFile "~/.rcedit/rcedit-x64.exe" -Uri $rceditUrl
-        }
-
-        Write-Verbose "Change icon to disambiguate it from a released installation" -Verbose
-        & "~/.rcedit/rcedit-x64.exe" "$Destination\pwsh.exe" --set-icon "$Destination\assets\Powershell_avatar.ico"
     }
 
     ## Change the mode of 'pwsh' to 'rwxr-xr-x' to allow execution
@@ -500,7 +495,7 @@ try {
 
     if (-not $UseMSI) {
         Write-Host "PowerShell has been installed at $Destination" -ForegroundColor Green
-        if ($Destination -eq $PSHome) {
+        if ($Destination -eq $PSHOME) {
             Write-Host "Please restart pwsh" -ForegroundColor Magenta
         }
     }

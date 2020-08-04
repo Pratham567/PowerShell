@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -147,7 +147,7 @@ using System.Reflection;
     [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
     {4} static global::System.Resources.ResourceManager ResourceManager {{
         get {{
-            if (object.ReferenceEquals(resourceMan, null)) {{
+            if (resourceMan is null) {{
                 global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager(""{1}.resources.{5}{3}"", typeof({0}).Assembly);
                 resourceMan = temp;
             }}

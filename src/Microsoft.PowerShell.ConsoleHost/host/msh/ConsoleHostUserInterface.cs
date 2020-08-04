@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -29,6 +29,11 @@ namespace Microsoft.PowerShell
     [SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
     internal partial class ConsoleHostUserInterface : System.Management.Automation.Host.PSHostUserInterface
     {
+        /// <summary>
+        /// This is the char that is echoed to the console when the input is masked. This not localizable.
+        /// </summary>
+        private const char PrintToken = '*';
+
         /// <summary>
         /// Command completion implementation object.
         /// </summary>
@@ -193,14 +198,12 @@ namespace Microsoft.PowerShell
         {
             HandleThrowOnReadAndPrompt();
 
-            const char printToken = '*'; // This is not localizable
-
             // we lock here so that multiple threads won't interleave the various reads and writes here.
 
             object result = null;
             lock (_instanceLock)
             {
-                result = ReadLineSafe(true, printToken);
+                result = ReadLineSafe(true, PrintToken);
             }
 
             SecureString secureResult = result as SecureString;
@@ -299,7 +302,7 @@ namespace Microsoft.PowerShell
 
                 Coordinates originalCursorPos = _rawui.CursorPosition;
 
-                do
+                while (true)
                 {
                     //
                     // read one char at a time so that we don't
@@ -358,7 +361,7 @@ namespace Microsoft.PowerShell
 #if UNIX
                     else if (char.IsControl(keyInfo.KeyChar))
                     {
-                        // blacklist control characters
+                        // deny list control characters
                         continue;
                     }
 #endif
@@ -390,7 +393,6 @@ namespace Microsoft.PowerShell
                         }
                     }
                 }
-                while (true);
             }
 #if UNIX
             catch (InvalidOperationException)
@@ -603,7 +605,7 @@ namespace Microsoft.PowerShell
 
         private void WriteToConsole(ConsoleColor foregroundColor, ConsoleColor backgroundColor, string text, bool newLine = false)
         {
-            // Sync access so that we don't race on color settings if called from multiple threads.
+            // Sync access so that we don't conflict on color settings if called from multiple threads.
             lock (_instanceLock)
             {
                 ConsoleColor fg = RawUI.ForegroundColor;
@@ -779,7 +781,7 @@ namespace Microsoft.PowerShell
 
         private void Write(ConsoleColor foregroundColor, ConsoleColor backgroundColor, string value, bool newLine)
         {
-            // Sync access so that we don't race on color settings if called from multiple threads.
+            // Sync access so that we don't conflict on color settings if called from multiple threads.
             lock (_instanceLock)
             {
                 ConsoleColor fg = RawUI.ForegroundColor;
@@ -1113,7 +1115,7 @@ namespace Microsoft.PowerShell
                     w.Flags = WordFlags.IsWhitespace;
                 }
 
-                do
+                while (true)
                 {
                     w.Text = text.Substring(startIndex, i - startIndex);
                     w.CellCount = RawUI.LengthInBufferCells(w.Text);
@@ -1129,7 +1131,7 @@ namespace Microsoft.PowerShell
 
                         --i;
                     }
-                } while (true);
+                }
 
                 Dbg.Assert(RawUI.LengthInBufferCells(w.Text) <= maxWidthInBufferCells, "word should not exceed max");
                 result.Add(w);
@@ -1376,8 +1378,8 @@ namespace Microsoft.PowerShell
         public ConsoleColor VerboseBackgroundColor { get; set; } = Console.BackgroundColor;
 
         // Progress colors
-        public ConsoleColor ProgressForegroundColor { get; set; } = ConsoleColor.Yellow;
-        public ConsoleColor ProgressBackgroundColor { get; set; } = ConsoleColor.DarkCyan;
+        public ConsoleColor ProgressForegroundColor { get; set; } = ConsoleColor.Black;
+        public ConsoleColor ProgressBackgroundColor { get; set; } = ConsoleColor.Yellow;
 
         #endregion Line-oriented interaction
 
@@ -1385,7 +1387,8 @@ namespace Microsoft.PowerShell
 
         // We use System.Environment.NewLine because we are platform-agnostic
 
-        internal static string Crlf = System.Environment.NewLine;
+        internal static readonly string Crlf = System.Environment.NewLine;
+
         private const string Tab = "\x0009";
 
         internal enum ReadLineResult
@@ -1584,7 +1587,7 @@ namespace Microsoft.PowerShell
             }
 
 #endif
-            do
+            while (true)
             {
 #if UNIX
                     keyInfo = Console.ReadKey(true);
@@ -1785,7 +1788,7 @@ namespace Microsoft.PowerShell
 
                     if (char.IsControl(keyInfo.KeyChar))
                     {
-                        // blacklist control characters
+                        // deny list control characters
                         continue;
                     }
 
@@ -1811,7 +1814,6 @@ namespace Microsoft.PowerShell
                     Console.CursorLeft = cursorCurrent + 1;
 #endif
             }
-            while (true);
 
             Dbg.Assert(
                        (s == null && result == ReadLineResult.endedOnBreak)
@@ -1865,8 +1867,11 @@ namespace Microsoft.PowerShell
         /// <returns>The string with any \0 characters removed...</returns>
         private string RemoveNulls(string input)
         {
-            if (input.IndexOf('\0') == -1)
+            if (input.Contains('\0'))
+            {
                 return input;
+            }
+
             StringBuilder sb = new StringBuilder();
             foreach (char c in input)
             {
@@ -1909,7 +1914,7 @@ namespace Microsoft.PowerShell
             string completionInput = null;
 #endif
 
-            do
+            while (true)
             {
                 if (TryInvokeUserDefinedReadLine(out input))
                 {
@@ -2041,7 +2046,6 @@ namespace Microsoft.PowerShell
                 }
 #endif
             }
-            while (true);
 
             // Since we did not transcribe any call to ReadLine, transcribe the results here.
 
@@ -2126,6 +2130,7 @@ namespace Microsoft.PowerShell
         }
 
         private const string CustomReadlineCommand = "PSConsoleHostReadLine";
+
         private bool TryInvokeUserDefinedReadLine(out string input)
         {
             // We're using GetCommands instead of GetCommand so we don't auto-load a module should the command exist, but isn't loaded.

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -59,7 +59,7 @@ namespace PSTests.Parallel
         [Fact]
         public static void TestBoundedStack()
         {
-            uint capacity = 20;
+            int capacity = 20;
             var boundedStack = new BoundedStack<string>(capacity);
             Assert.Throws<InvalidOperationException>(() => boundedStack.Pop());
 

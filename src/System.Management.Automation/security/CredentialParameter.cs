@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 #pragma warning disable 1634, 1691
@@ -32,12 +32,13 @@ namespace System.Management.Automation
             PSCredential cred = null;
             string userName = null;
             bool shouldPrompt = false;
+            bool confirmPassword = false;
 
             if ((engineIntrinsics == null) ||
                (engineIntrinsics.Host == null) ||
                (engineIntrinsics.Host.UI == null))
             {
-                throw PSTraceSource.NewArgumentNullException("engineIntrinsics");
+                throw PSTraceSource.NewArgumentNullException(nameof(engineIntrinsics));
             }
 
             if (inputData == null)
@@ -74,10 +75,13 @@ namespace System.Management.Automation
                 prompt = CredentialAttributeStrings.CredentialAttribute_Prompt;
 
                 cred = engineIntrinsics.Host.UI.PromptForCredential(
-                           caption,
-                           prompt,
-                           userName,
-                           string.Empty);
+                            caption,
+                            prompt,
+                            userName,
+                            confirmPassword,
+                            string.Empty,
+                            PSCredentialTypes.Default,
+                            PSCredentialUIOptions.Default);
             }
 
             return cred;

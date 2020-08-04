@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -25,7 +25,7 @@ namespace Microsoft.PowerShell.Commands
     /// Cmdlet to create a new module manifest file.
     /// </summary>
     [Cmdlet(VerbsCommon.New, "ModuleManifest", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.Low,
-        HelpUri = "https://go.microsoft.com/fwlink/?LinkID=141555")]
+        HelpUri = "https://go.microsoft.com/fwlink/?LinkID=2096487")]
     [OutputType(typeof(string))]
     public sealed class NewModuleManifestCommand : PSCmdlet
     {
@@ -184,7 +184,7 @@ namespace Microsoft.PowerShell.Commands
         /// Gets or sets the CLR version required by the module.
         /// </summary>
         [Parameter]
-        public Version CLRVersion
+        public Version ClrVersion
         {
             get { return _ClrVersion; }
 
@@ -477,7 +477,7 @@ namespace Microsoft.PowerShell.Commands
         /// Gets or sets whether or not the module requires explicit user acceptance for install/update/save.
         /// </summary>
         [Parameter]
-        public SwitchParameter RequireLicenseAcceptance { get; set; } = true;
+        public SwitchParameter RequireLicenseAcceptance { get; set; }
 
         /// <summary>
         /// Gets or sets the external module dependencies.
@@ -538,7 +538,7 @@ namespace Microsoft.PowerShell.Commands
         {
             if (name == null)
                 return "''";
-            return ("'" + name.ToString().Replace("'", "''") + "'");
+            return ("'" + name.Replace("'", "''") + "'");
         }
 
         /// <summary>
@@ -628,7 +628,7 @@ namespace Microsoft.PowerShell.Commands
             {
                 foreach (object spec in moduleSpecs)
                 {
-                    if (!(spec is Hashtable))
+                    if (spec is not Hashtable)
                     {
                         yield return spec.ToString();
                     }
@@ -965,7 +965,7 @@ namespace Microsoft.PowerShell.Commands
                 ValidateUriParameterValue(new Uri(_helpInfoUri), "HelpInfoUri");
             }
 
-            if (CompatiblePSEditions != null && (CompatiblePSEditions.Distinct(StringComparer.OrdinalIgnoreCase).Count() != CompatiblePSEditions.Count()))
+            if (CompatiblePSEditions != null && (CompatiblePSEditions.Distinct(StringComparer.OrdinalIgnoreCase).Count() != CompatiblePSEditions.Length))
             {
                 string message = StringUtil.Format(Modules.DuplicateEntriesInCompatiblePSEditions, string.Join(",", CompatiblePSEditions));
                 var ioe = new InvalidOperationException(message);
@@ -1058,7 +1058,7 @@ namespace Microsoft.PowerShell.Commands
 
                     BuildModuleManifest(result, nameof(DotNetFrameworkVersion), StringUtil.Format(Modules.DotNetFrameworkVersion, Modules.PrerequisiteForDesktopEditionOnly), _DotNetFrameworkVersion != null && !string.IsNullOrEmpty(_DotNetFrameworkVersion.ToString()), () => QuoteName(_DotNetFrameworkVersion), streamWriter);
 
-                    BuildModuleManifest(result, nameof(CLRVersion), StringUtil.Format(Modules.CLRVersion, Modules.PrerequisiteForDesktopEditionOnly), _ClrVersion != null && !string.IsNullOrEmpty(_ClrVersion.ToString()), () => QuoteName(_ClrVersion), streamWriter);
+                    BuildModuleManifest(result, nameof(ClrVersion), StringUtil.Format(Modules.CLRVersion, Modules.PrerequisiteForDesktopEditionOnly), _ClrVersion != null && !string.IsNullOrEmpty(_ClrVersion.ToString()), () => QuoteName(_ClrVersion), streamWriter);
 
                     BuildModuleManifest(result, nameof(ProcessorArchitecture), Modules.ProcessorArchitecture, _processorArchitecture.HasValue, () => QuoteName(_processorArchitecture.ToString()), streamWriter);
 

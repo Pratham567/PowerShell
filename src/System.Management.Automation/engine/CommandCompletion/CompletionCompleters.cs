@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Collections;
@@ -120,7 +120,7 @@ namespace System.Management.Automation
                     foreach (var defn in findFunctionsVisitor.FunctionDefinitions)
                     {
                         if (commandNamePattern.IsMatch(defn.Name)
-                            && !commandResults.Where(cr => cr.CompletionText.Equals(defn.Name, StringComparison.OrdinalIgnoreCase)).Any())
+                            && !commandResults.Any(cr => cr.CompletionText.Equals(defn.Name, StringComparison.OrdinalIgnoreCase)))
                         {
                             // Results found in the current script are prepended to show up at the top of the list.
                             commandResults.Insert(0, GetCommandNameCompletionResult(defn.Name, defn, addAmpersandIfNecessary, quote));
@@ -207,7 +207,8 @@ namespace System.Management.Automation
         }
 
         private static readonly HashSet<string> s_keywordsToExcludeFromAddingAmpersand
-            = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { TokenKind.InlineScript.ToString(), TokenKind.Configuration.ToString() };
+            = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { nameof(TokenKind.InlineScript), nameof(TokenKind.Configuration) };
+
         internal static CompletionResult GetCommandNameCompletionResult(string name, object command, bool addAmpersandIfNecessary, string quote)
         {
             string syntax = name, listItem = name;
@@ -1164,7 +1165,7 @@ namespace System.Management.Automation
                 var tryCmdletCompletion = false;
                 var clearLiteralPathsKey = TurnOnLiteralPathOption(context);
 
-                if (context.WordToComplete.IndexOf('-') != -1)
+                if (context.WordToComplete.Contains('-'))
                 {
                     tryCmdletCompletion = true;
                 }
@@ -1224,7 +1225,7 @@ namespace System.Management.Automation
                 }
 
                 // Handle member completion with wildcard: echo $a.*<tab>
-                if (pathAst.Value.IndexOf('*') != -1 && secondToLastMemberAst != null &&
+                if (pathAst.Value.Contains('*') && secondToLastMemberAst != null &&
                     secondToLastMemberAst.Extent.EndLineNumber == pathAst.Extent.StartLineNumber &&
                     secondToLastMemberAst.Extent.EndColumnNumber == pathAst.Extent.StartColumnNumber)
                 {
@@ -1328,7 +1329,7 @@ namespace System.Management.Automation
                         context.Options.Remove("LiteralPaths");
                 }
 
-                if (context.WordToComplete != string.Empty && context.WordToComplete.IndexOf('-') != -1)
+                if (context.WordToComplete != string.Empty && context.WordToComplete.Contains('-'))
                 {
                     var commandResults = CompleteCommand(context);
                     if (commandResults != null)
@@ -1602,7 +1603,7 @@ namespace System.Management.Automation
                         if (parameterSetData.ParameterSetFlag == defaultParameterSetFlag)
                         {
                             ProcessParameter(commandName, commandAst, context, result, param, boundArguments);
-                            isProcessedAsPositional = result.Any();
+                            isProcessedAsPositional = result.Count > 0;
                             break;
                         }
                         else
@@ -1687,7 +1688,7 @@ namespace System.Management.Automation
 
                 string enumString = LanguagePrimitives.EnumSingleTypeConverter.EnumValues(parameterType);
                 string separator = CultureInfo.CurrentUICulture.TextInfo.ListSeparator;
-                string[] enumArray = enumString.Split(new string[] { separator }, StringSplitOptions.RemoveEmptyEntries);
+                string[] enumArray = enumString.Split(separator, StringSplitOptions.RemoveEmptyEntries);
 
                 string wordToComplete = context.WordToComplete;
                 string quote = HandleDoubleAndSingleQuote(ref wordToComplete);
@@ -1894,7 +1895,7 @@ namespace System.Management.Automation
                             yield return new PSTypeName(pso.TypeNames[0]);
                         }
 
-                        if (!(pso.BaseObject is PSCustomObject))
+                        if (pso.BaseObject is not PSCustomObject)
                         {
                             yield return new PSTypeName(pso.BaseObject.GetType());
                         }
@@ -1993,16 +1994,27 @@ namespace System.Management.Automation
             CompletionContext context,
             Dictionary<string, AstParameterArgumentPair> boundArguments = null)
         {
-            if (string.IsNullOrEmpty(commandName))
+            string parameterName = parameter.Name;
+
+            // Fall back to the commandAst command name if a command name is not found. This can be caused by a script block or AST with the matching function definition being passed to CompleteInput
+            // This allows for editors and other tools using CompleteInput with Script/AST definations to get values from RegisteredArgumentCompleters to better match the console experience.
+            // See issue https://github.com/PowerShell/PowerShell/issues/10567
+            string actualCommandName = string.IsNullOrEmpty(commandName)
+                        ? commandAst.GetCommandName()
+                        : commandName;
+
+            if (string.IsNullOrEmpty(actualCommandName))
             {
                 return;
             }
 
-            var parameterName = parameter.Name;
-            var customCompleter = GetCustomArgumentCompleter(
-                    "CustomArgumentCompleters",
-                    new[] { commandName + ":" + parameterName, parameterName },
-                    context);
+            string parameterFullName = $"{actualCommandName}:{parameterName}";
+
+            ScriptBlock customCompleter = GetCustomArgumentCompleter(
+                "CustomArgumentCompleters",
+                new[] { parameterFullName, parameterName },
+                context);
+
             if (customCompleter != null)
             {
                 if (InvokeScriptArgumentCompleter(
@@ -2446,7 +2458,7 @@ namespace System.Management.Automation
             {
             }
 
-            if (customResults == null || !customResults.Any())
+            if (customResults == null || customResults.Count == 0)
             {
                 return false;
             }
@@ -3833,7 +3845,7 @@ namespace System.Management.Automation
                 wordToComplete = wordToComplete.Substring(1, wordToComplete.Length - (endQuoted ? 2 : 1));
             }
 
-            if (wordToComplete.IndexOf('[') != -1)
+            if (wordToComplete.Contains('['))
             {
                 var cursor = (InternalScriptPosition)context.CursorPosition;
                 cursor = cursor.CloneWithNewOffset(cursor.Offset - context.TokenAtCursor.Extent.StartOffset - (isQuoted ? 1 : 0));
@@ -4494,6 +4506,7 @@ namespace System.Management.Automation
         private const int ERROR_MORE_DATA = 234;
         private const int STYPE_DISKTREE = 0;
         private const int STYPE_MASK = 0x000000FF;
+
         private static System.IO.EnumerationOptions _enumerationOptions = new System.IO.EnumerationOptions
         {
             MatchCasing = MatchCasing.CaseInsensitive,
@@ -4569,6 +4582,7 @@ namespace System.Management.Automation
         }
 
         private static readonly string[] s_variableScopes = new string[] { "Global:", "Local:", "Script:", "Private:" };
+
         private static readonly char[] s_charactersRequiringQuotes = new char[] {
             '-', '`', '&', '@', '\'', '"', '#', '{', '}', '(', ')', '$', ',', ';', '|', '<', '>', ' ', '.', '\\', '/', '\t', '^',
         };
@@ -4581,7 +4595,7 @@ namespace System.Management.Automation
             var wordToComplete = context.WordToComplete;
             var colon = wordToComplete.IndexOf(':');
 
-            var lastAst = context.RelatedAsts.Last();
+            var lastAst = context.RelatedAsts?.Last();
             var variableAst = lastAst as VariableExpressionAst;
             var prefix = variableAst != null && variableAst.Splatted ? "@" : "$";
 
@@ -5395,7 +5409,7 @@ namespace System.Management.Automation
 
             var memberInfo = member as MemberInfo;
             if (memberInfo != null)
-                return memberInfo.GetCustomAttributes(typeof(HiddenAttribute), false).Any();
+                return memberInfo.GetCustomAttributes(typeof(HiddenAttribute), false).Length > 0;
 
             var propertyMemberAst = member as PropertyMemberAst;
             if (propertyMemberAst != null)
@@ -5621,7 +5635,7 @@ namespace System.Management.Automation
                 // If the completion included a namespace and ToStringCodeMethods.Type found
                 // an accelerator, then just use the type's FullName instead because the user
                 // probably didn't want the accelerator.
-                if (keyMatched.IndexOf('.') != -1 && completion.IndexOf('.') == -1)
+                if (keyMatched.Contains('.') && !completion.Contains('.'))
                 {
                     completion = Type.FullName;
                 }
@@ -5709,6 +5723,7 @@ namespace System.Management.Automation
         }
 
         private static TypeCompletionMapping[][] s_typeCache;
+
         private static TypeCompletionMapping[][] InitializeTypeCache()
         {
             #region Process_TypeAccelerators
@@ -5998,19 +6013,22 @@ namespace System.Management.Automation
             }
 
             // this is a temporary fix. Only the type defined in the same script get complete. Need to use using Module when that is available.
-            var scriptBlockAst = (ScriptBlockAst)context.RelatedAsts[0];
-            var typeAsts = scriptBlockAst.FindAll(ast => ast is TypeDefinitionAst, false).Cast<TypeDefinitionAst>();
-            foreach (var typeAst in typeAsts.Where(ast => pattern.IsMatch(ast.Name)))
+            if (context.RelatedAsts != null && context.RelatedAsts.Count > 0)
             {
-                string toolTipPrefix = string.Empty;
-                if (typeAst.IsInterface)
-                    toolTipPrefix = "Interface ";
-                else if (typeAst.IsClass)
-                    toolTipPrefix = "Class ";
-                else if (typeAst.IsEnum)
-                    toolTipPrefix = "Enum ";
+                var scriptBlockAst = (ScriptBlockAst)context.RelatedAsts[0];
+                var typeAsts = scriptBlockAst.FindAll(ast => ast is TypeDefinitionAst, false).Cast<TypeDefinitionAst>();
+                foreach (var typeAst in typeAsts.Where(ast => pattern.IsMatch(ast.Name)))
+                {
+                    string toolTipPrefix = string.Empty;
+                    if (typeAst.IsInterface)
+                        toolTipPrefix = "Interface ";
+                    else if (typeAst.IsClass)
+                        toolTipPrefix = "Class ";
+                    else if (typeAst.IsEnum)
+                        toolTipPrefix = "Enum ";
 
-                results.Add(new CompletionResult(prefix + typeAst.Name + suffix, typeAst.Name, CompletionResultType.Type, toolTipPrefix + typeAst.Name));
+                    results.Add(new CompletionResult(prefix + typeAst.Name + suffix, typeAst.Name, CompletionResultType.Type, toolTipPrefix + typeAst.Name));
+                }
             }
 
             results.Sort((c1, c2) => string.Compare(c1.ListItemText, c2.ListItemText, StringComparison.OrdinalIgnoreCase));
@@ -6019,7 +6037,10 @@ namespace System.Management.Automation
 
         private static string GetNamespaceToRemove(CompletionContext context, TypeCompletionBase completion)
         {
-            if (completion is NamespaceCompletion) { return null; }
+            if (completion is NamespaceCompletion || context.RelatedAsts == null || context.RelatedAsts.Count == 0)
+            {
+                return null;
+            }
 
             var typeCompletion = completion as TypeCompletion;
             string typeNameSpace = typeCompletion != null
@@ -6134,7 +6155,7 @@ namespace System.Management.Automation
 
                     string enumString = LanguagePrimitives.EnumSingleTypeConverter.EnumValues(typeof(SwitchFlags));
                     string separator = CultureInfo.CurrentUICulture.TextInfo.ListSeparator;
-                    string[] enumArray = enumString.Split(new string[] { separator }, StringSplitOptions.RemoveEmptyEntries);
+                    string[] enumArray = enumString.Split(separator, StringSplitOptions.RemoveEmptyEntries);
 
                     var pattern = WildcardPattern.Get(wordToComplete + "*", WildcardOptions.IgnoreCase);
                     var enumList = new List<string>();
@@ -6607,9 +6628,9 @@ namespace System.Management.Automation
                     }
 
                     string tooltip = memberInfo.ToString();
-                    if (tooltip.IndexOf("),", StringComparison.Ordinal) != -1)
+                    if (tooltip.Contains("),", StringComparison.Ordinal))
                     {
-                        var overloads = tooltip.Split(new[] { ")," }, StringSplitOptions.RemoveEmptyEntries);
+                        var overloads = tooltip.Split("),", StringSplitOptions.RemoveEmptyEntries);
                         var newTooltip = new StringBuilder();
                         foreach (var overload in overloads)
                         {
@@ -7119,7 +7140,7 @@ namespace System.Management.Automation
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            if (!(commandAst.Parent is PipelineAst pipelineAst))
+            if (commandAst.Parent is not PipelineAst pipelineAst)
             {
                 return null;
             }
